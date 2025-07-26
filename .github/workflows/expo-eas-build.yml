@@ -1,28 +1,24 @@
-name: Build Android App
+name: Expo EAS Build (Android)
 
 on:
   push:
-    branches:
-      - main  # or your target branch
+    branches: [ main ]
 
 jobs:
-  build:
+  eas-build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
-      - name: Set Expo token
-        run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
+      - name: Log in to Expo
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build Android with EAS
-        run: npx eas build --platform android --non-interactive
+      - name: Start EAS Build
+        run: eas build --platform android --non-interactive
