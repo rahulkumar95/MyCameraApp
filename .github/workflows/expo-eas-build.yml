@@ -13,12 +13,43 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm # or yarn, if you use yarn
+          cache-dependency-path: package-lock.json # or yarn.lock
+
+      - name: Install dependencies
+        run: |
+          npm ci # Use npm ci for clean installs in CI/CD environments
+          # If you use yarn: yarn install --frozen-lockfile
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      # The key change is here: Pass the token as an environment variable
+      # The key change for EAS login - setting EXPO_TOKEN as an environment variable for the build step.
+      # No separate 'eas login' command is needed if EXPO_TOKEN is set for the build.
       - name: Start EAS Build
         run: eas build --platform android --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Add any other environment variables your app.config.js might need
+          # e.g., EXPO_PUBLIC_API_KEY: ${{ secrets.API_KEY }}
+
+      # --- Debugging Steps (add these temporarily if issues persist) ---
+      - name: Print package.json
+        run: cat package.json
+
+      - name: Print app.json / app.config.js
+        # Adjust filename if you use app.config.ts or app.config.js
+        run: cat app.json || cat app.config.js || echo "No app.json or app.config.js found"
+        continue-on-error: true # Allow this to fail if file doesn't exist
+
+      - name: Print babel.config.js
+        run: cat babel.config.js || echo "No babel.config.js found"
+        continue-on-error: true # Allow this to fail if file doesn't exist
+
+      - name: Run expo doctor
+        run: npx expo doctor
+        # This can help diagnose project setup issues
+
+      - name: Test expo config command
+        run: npx expo config --json
+        # This will directly tell you if expo config is failing
